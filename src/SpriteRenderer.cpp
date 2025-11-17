@@ -10,38 +10,49 @@ SpriteRenderer::SpriteRenderer(Shader &shader)
 //for sprite sheet
 SpriteRenderer::SpriteRenderer(Shader &shader, int sprite_base, int sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height)
 {
+    //make them global later
+    base = sprite_base;
+    distance = sprite_distance;
+    
+    width = img_width;
+    height = img_height;
+
+    SetSpriteLocation(sprite_column, sprite_row);
+    
+    this->shader = shader;
+}
+
+void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
+{
     //find NDC pixel
-    double NDC_pixel_x = 1.0 / img_width;
-    double NDC_pixel_y = 1.0 / img_height;
+    double NDC_pixel_x = 1.0 / width;
+    double NDC_pixel_y = 1.0 / height;
     int current_sprite = 0;
-    
-    
+       
     //1// Getting the sprite max min for X axis
-    current_sprite = sprite_base * sprite_column;
+    current_sprite = base * sprite_column;
     //if its not first sprite add distance
     if(sprite_column > 1)
-	current_sprite += sprite_distance;
+	current_sprite += distance;
     
     //max min value x axis
     float X_sprite_max = NDC_pixel_x * current_sprite;
-    float X_sprite_min = NDC_pixel_x * (current_sprite - sprite_base);
+    float X_sprite_min = NDC_pixel_x * (current_sprite - base);
     //if its first sprite
     if(sprite_column < 1)
         X_sprite_min = 0.0;
 
 
     //2// Getting the max min value for  Y axis
-    current_sprite = sprite_base * sprite_row;
+    current_sprite = base * sprite_row;
     
     float Y_sprite_max = NDC_pixel_y * current_sprite;
-    float Y_sprite_min = NDC_pixel_y * (current_sprite - sprite_base);
+    float Y_sprite_min = NDC_pixel_y * (current_sprite - base);
     //if its first sprite
     if(sprite_row < 1)
         Y_sprite_min = 0.0;
-    
-    
-    this->shader = shader;
-    this->initRenderData_SpriteSheet(X_sprite_max, X_sprite_min, Y_sprite_max, Y_sprite_min);
+        
+   this->initRenderData_SpriteSheet(X_sprite_max, X_sprite_min, Y_sprite_max, Y_sprite_min);
 }
 
 //destructor - delete VAO

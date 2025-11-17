@@ -4,68 +4,123 @@
 #include <iostream>
 #include "ResourceManager.h"
 #include "SpriteRenderer.h"
+#include "Time.h"
+#include "EntityBehaviour.h"
 
 using namespace std;
 
 class Game
 {
 private:
-	//global variables
+
+	//VARIABLES
+	
+	//animation stuff
+		Time time;
+		int sprite_location = 1;
+	
+	//delta time
+		float deltaTime = 0.0f;
 	
 	//window related variables
-	GLuint Window_width = 800;
-	GLuint Window_height = 600;
-	GLFWwindow* window = 0;
+		GLuint Window_width = 800; 
+		GLuint Window_height = 600;
+		GLFWwindow* window = 0;
 	
 	//game running condition variable
-	bool running = true;
+		bool running = true;
 	
 	//Sprite renderer object
-	SpriteRenderer  *Renderer;
+		SpriteRenderer  *Renderer;
+		
+	//player
+		Player* player = new Player(glm::vec2(350.0f, 500.0f), glm::vec2(70.0f, 70.0f), glm::vec3(1.0f, 1.0f, 1.0f));
 	
-	//callbacks
-	//framebuffer for viewport 
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+	//METHODS
+	//input 
+	void ProcessInput()
 	{
-	    glViewport(0, 0, width, height);
+	  //Game Exit
+		if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS)
+				glfwSetWindowShouldClose(window,true);
+	  //Player input	
+		if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+				player->move_player = RIGHT;
+
+		if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+				player->move_player = LEFT;
 	}
-	//glfw error callback
-	static void error_callback(int error, const char* description)
+	
+	//update 
+	void Update()
 	{
-		fprintf(stderr, "Error: %s\n", description);
+	//player animation
+		  //timer
+		  bool animation = time.Timer(0.1);
+		  //if the player is moving
+		  if(player->move_player != NONE)
+		  {
+		  	if(animation)
+		  	{
+		  		Renderer->SetSpriteLocation(sprite_location, 1);
+		  		sprite_location ++;
+		  
+			if(sprite_location > 6)
+				sprite_location = 1;
+		  	}
+		  }
+		  //if the player is not moving
+		  else
+		  	Renderer->SetSpriteLocation(1, 1);
+
+	//get deltatime
+		deltaTime = time.GetDeltaTime();
+		
+	//check if window is closing 
+		if(glfwWindowShouldClose(window))
+				running = false;
+
+	//Player movement
+		float speed = 200.0 * deltaTime;
+		
+		switch(player->move_player)
+		{
+			case(RIGHT): player->position.x += speed; player->move_player = NONE;	break;
+			case(LEFT):  player->position.x -= speed; player->move_player = NONE;	break;
+		}
+	
+	//Checking if player hits window border
+		//player->BorderCheck(Window_width);	//player stays at border
+		player->BorderSwap(Window_width);	//player swaps borders
+	}
+	
+	//render
+	void Render()
+	{
+		//background color
+		glClearColor(0.1f,0.5f,0.3f,1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		//draw player sprite	
+		Renderer->DrawSprite(ResourceManager::GetTexture("face"), player->position, player->size, 0.0f, player->rotation);
+			
+		//swap buffers poll events
+		glfwSwapBuffers(window);
+		glfwPollEvents();	
 	}
 	
 public:
-
-//player
-glm::vec2 player_pos = glm::vec2(350.0f, 500.0f);
-
-
-//bool move_player = false;
-enum Movement 
-{
-	UP,
-	DOWN,
-	RIGHT,
-	LEFT,
-	NONE
-};
-Movement move_player = NONE;
 
 	//Constructor to Initialize game
 	Game()
 	{
 		//set error callback
-		glfwSetErrorCallback(error_callback);
+		glfwSetErrorCallback([](int error, const char* description){fprintf(stderr, "Error: %s\n", description); });
 		
 		//initializing glfw
 		if(!glfwInit())
-		{
 			running = false;
-		}
 		
-
-
 		//setting window hints
 		//glfw version
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -116,83 +171,32 @@ Movement move_player = NONE;
 		imgSize[0] = ResourceManager::GetTexture("face").img_width;
 		imgSize[1] = ResourceManager::GetTexture("face").img_height;
 		// set render-specific controls
-		Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 64, 0, 2, 1, imgSize[0], imgSize[1]);
-
+		Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 64, 0, 1, 1, imgSize[0], imgSize[1]);	
 		
+		//viewport framebuffer callback
+		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
 	}
 	
-	//input 
-	void ProcessInput()
-	{
-			if(glfwGetKey(window,GLFW_KEY_ESCAPE) == GLFW_PRESS)
-					glfwSetWindowShouldClose(window,true);
-					
-			if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-					move_player = RIGHT;
-
-			if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-					move_player = LEFT;
-
-			if(glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-					move_player = UP;
-
-			if(glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-					move_player = DOWN;
-	}
-	
-	//update function
-	void Update()
-	{
-		//check if window is closing 
-		if(glfwWindowShouldClose(window))
-				running = false;
-		//Player movement
-		switch(move_player)
-		{
-			case(RIGHT): player_pos.x += 2.0; move_player = NONE;	break;
-			case(LEFT):  player_pos.x -= 2.0; move_player = NONE;	break;
-			case(UP):    player_pos.y -= 2.0; move_player = NONE;	break;
-			case(DOWN):  player_pos.y += 2.0; move_player = NONE;	break;
-		}
-			
-		//setup viewport framebuffer
-		glfwSetFramebufferSizeCallback(window, glfwSetFramebufferSizeCallback(window, framebuffer_size_callback));//[](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); }); 
-	}
-	
-	//render
-	void Render()
-	{
-		glClearColor(0.1f,0.5f,0.3f,1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
-		//					texsture 	    position 			size			  rotate 	color
-		Renderer->DrawSprite(ResourceManager::GetTexture("face"), player_pos, glm::vec2(70.0f, 70.0f), 0.0f, glm::vec3(1.0f, 1.0f, 1.0f));
-			
-		glfwSwapBuffers(window);
-		glfwPollEvents();	
-	}
-
 	//run game
 	void Run()
 	{
+		//game loop
 		while(running == true)
-		{
+		{		
 			ProcessInput();
 			Update();
 			Render();
 		}
-		
+		//clear resources
 		ResourceManager::Clear();
+		//terminate glfw
 		glfwTerminate();
 	}
 };
-
 
 int main()
 {
 	Game game;
 	game.Run();
-
-//cout<<"Hello World !"<<endl;
-
-return 0;
+	return 0;
 }

@@ -20,7 +20,15 @@ class SpriteRenderer
 		//does transformations and then draws the texture
 		void DrawSprite(Texture2D &texture, glm::vec2 position, glm::vec2 size = glm::vec2(10.0f, 10.0f), float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f));
 		
+		void SetSpriteLocation(int sprite_column, int sprite_row);
+		
 	private:
+		
+		int base = 0;
+		int distance = 0;
+    		int width = 0;
+    		int height = 0;
+    
 		Shader shader;
 		unsigned int quadVAO;
 		
