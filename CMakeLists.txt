@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDART 11)
 set(CMAKE_CXX_STANDART_REQUIRED ON)
 
 #project
-project(SpaceInvaders_Like VERSION 0.01 )
+project(SpaceInvaders_Like VERSION 0.02 )
 
 #opengl
 set(OPENGL_GL_PREFERENCE LEGACY)

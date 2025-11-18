@@ -1,14 +1,11 @@
 ### CHANGE LOG
 
-- Fixed Framebuffer Size Callback.
+- Changed SpriteRenderer to Renderer adding class for rendering shapes **ShapeRenderer**.
 
-- Modified SpriteRenderer class Adding the method **SetSpriteLocation** that selects a sprite from spritesheet.
+- Fixed player properties.
 
-- Created Player class inside EntityBehaviour that contains player properties and 2 methods for checking window border.
+- Added player bullet.
 
-- Created Time class that contains methods **Timer** for setting a timer and **GetDeltaTime** for getting the deltatime.
-
-- Added Player movement animation.
-
-- Updated player movement.
+### SHOWCASE
+![](https://github.com/HuseinSolakov/Space_Invaders/blob/main/showcase.gif)
 

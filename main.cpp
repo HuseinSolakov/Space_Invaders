@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include "ResourceManager.h"
-#include "SpriteRenderer.h"
+#include "Renderer.h"
 #include "Time.h"
 #include "EntityBehaviour.h"
 
@@ -31,10 +31,11 @@ private:
 		bool running = true;
 	
 	//Sprite renderer object
-		SpriteRenderer  *Renderer;
+		SpriteRenderer  *sprite_renderer;
+		ShapeRenderer   *shape_renderer;
 		
 	//player
-		Player* player = new Player(glm::vec2(350.0f, 500.0f), glm::vec2(70.0f, 70.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+		Player* player = new Player(glm::vec2(350.0f, 500.0f), glm::vec2(70.0f, 70.0f));
 	
 	//METHODS
 	//input 
@@ -45,10 +46,13 @@ private:
 				glfwSetWindowShouldClose(window,true);
 	  //Player input	
 		if(glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
-				player->move_player = RIGHT;
+				player->move_player = Movement::RIGHT;
 
 		if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-				player->move_player = LEFT;
+				player->move_player = Movement::LEFT;
+	  //Player bullet
+	  	if(glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS)
+	  			player->bullet = Bullet::SHOOT;
 	}
 	
 	//update 
@@ -58,11 +62,11 @@ private:
 		  //timer
 		  bool animation = time.Timer(0.1);
 		  //if the player is moving
-		  if(player->move_player != NONE)
+		  if(player->move_player != Movement::NONE)
 		  {
 		  	if(animation)
 		  	{
-		  		Renderer->SetSpriteLocation(sprite_location, 1);
+		  		sprite_renderer->SetSpriteLocation(sprite_location, 1);
 		  		sprite_location ++;
 		  
 			if(sprite_location > 6)
@@ -71,7 +75,7 @@ private:
 		  }
 		  //if the player is not moving
 		  else
-		  	Renderer->SetSpriteLocation(1, 1);
+		  	sprite_renderer->SetSpriteLocation(1, 1);
 
 	//get deltatime
 		deltaTime = time.GetDeltaTime();
@@ -79,19 +83,21 @@ private:
 	//check if window is closing 
 		if(glfwWindowShouldClose(window))
 				running = false;
-
 	//Player movement
 		float speed = 200.0 * deltaTime;
 		
 		switch(player->move_player)
 		{
-			case(RIGHT): player->position.x += speed; player->move_player = NONE;	break;
-			case(LEFT):  player->position.x -= speed; player->move_player = NONE;	break;
+			case(Movement::RIGHT): player->position.x += speed; player->move_player = Movement::NONE;	break;
+			case(Movement::LEFT):  player->position.x -= speed; player->move_player = Movement::NONE;	break;
 		}
 	
 	//Checking if player hits window border
 		//player->BorderCheck(Window_width);	//player stays at border
 		player->BorderSwap(Window_width);	//player swaps borders
+	//Player Bullet
+		float bullet_speed = 400.0 * deltaTime;
+		player->PlayerBullet(bullet_speed);
 	}
 	
 	//render
@@ -102,8 +108,9 @@ private:
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//draw player sprite	
-		Renderer->DrawSprite(ResourceManager::GetTexture("face"), player->position, player->size, 0.0f, player->rotation);
-			
+		shape_renderer->DrawShape(player->bullet_position, glm::vec2(20.0f, 20.0f), 0.0f, glm::vec3(0.7f, 0.0f, 0.3f));
+		sprite_renderer->DrawSprite(ResourceManager::GetTexture("face"), player->position, player->size);
+
 		//swap buffers poll events
 		glfwSwapBuffers(window);
 		glfwPollEvents();	
@@ -157,11 +164,15 @@ public:
 		
 		//sprite
 		//load shaders into shader program
-   		ResourceManager::LoadShader("../shaders/sprite.vs", "../shaders/sprite.frag", nullptr, "sprite_sheet");
+		ResourceManager::LoadShader("../shaders/default.vert", "../shaders/default.frag", nullptr, "shape_shader");
+   		ResourceManager::LoadShader("../shaders/sprite.vert", "../shaders/sprite.frag", nullptr, "sprite_sheet");
+
 		// configure shaders
 		glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(Window_width), static_cast<float>(Window_height), 0.0f, -1.0f, 1.0f);
 		ResourceManager::GetShader("sprite_sheet").Use().SetInteger("image", 0);
-		ResourceManager::GetShader("sprite_sheet").SetMatrix4("projection", projection);
+		ResourceManager::GetShader("sprite_sheet").Use().SetMatrix4("projection", projection);
+		
+		ResourceManager::GetShader("shape_shader").Use().SetMatrix4("projection", projection);
 	
 		// load sprite source
 		ResourceManager::LoadTexture("../Textures/player_test.png", true, "face");
@@ -171,8 +182,9 @@ public:
 		imgSize[0] = ResourceManager::GetTexture("face").img_width;
 		imgSize[1] = ResourceManager::GetTexture("face").img_height;
 		// set render-specific controls
-		Renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 64, 0, 1, 1, imgSize[0], imgSize[1]);	
-		
+		sprite_renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 64, 0, 1, 1, imgSize[0], imgSize[1]);	
+		shape_renderer = new ShapeRenderer(ResourceManager::GetShader("shape_shader"));
+			
 		//viewport framebuffer callback
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
 	}
