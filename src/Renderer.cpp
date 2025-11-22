@@ -1,5 +1,5 @@
 #include "Renderer.h"
-
+#include <iostream>
 //--- ShapeRenderer ---
 
 //constructor
@@ -53,8 +53,7 @@ void ShapeRenderer::initRenderData()
 		
 		0.0f, 1.0f,
 		1.0f, 1.0f,
-		1.0f, 0.0f,
-		
+		1.0f, 0.0f,		
 	};
 	
 	//gen VAO
@@ -76,7 +75,6 @@ void ShapeRenderer::initRenderData()
 	glBindVertexArray(0);		
 }
 
-
 //---- SpriteRenderer ---
 
 //constructor
@@ -88,9 +86,9 @@ SpriteRenderer::SpriteRenderer(Shader &shader)
 }
 
 //for sprite sheet
-SpriteRenderer::SpriteRenderer(Shader &shader, int sprite_base, int sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height)
+SpriteRenderer::SpriteRenderer
+(Shader &shader, int sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height)
 {
-    //make them global later
     base = sprite_base;
     distance = sprite_distance;
     
@@ -105,7 +103,7 @@ SpriteRenderer::SpriteRenderer(Shader &shader, int sprite_base, int sprite_dista
 //destructor - delete VAO
 SpriteRenderer::~SpriteRenderer()
 {
-    glDeleteVertexArrays(1, &this->quadVAO);
+        glDeleteVertexArrays(1, &this->quadVAO);
 }
 
 void SpriteRenderer::DrawSprite(Texture2D &texture, glm::vec2 position, glm::vec2 size, float rotate, glm::vec3 color)
@@ -144,7 +142,7 @@ void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
     current_sprite = base * sprite_column;
     //if its not first sprite add distance
     if(sprite_column > 1)
-	current_sprite += distance;
+	current_sprite += distance.x;
     
     //max min value x axis
     float X_sprite_max = NDC_pixel_x * current_sprite;
@@ -156,6 +154,7 @@ void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
 
     //2// Getting the max min value for  Y axis
     current_sprite = base * sprite_row;
+    current_sprite += distance.y;
     
     float Y_sprite_max = NDC_pixel_y * current_sprite;
     float Y_sprite_min = NDC_pixel_y * (current_sprite - base);
