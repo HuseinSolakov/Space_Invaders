@@ -1,15 +1,13 @@
-### CHANGE LOG
+# CHANGE LOG
 
-- Added enemies.
+- Added enemy movement.
 
-- Added hit detection for player bullet.
+- Added enemy bullet.
 
-- Added animations for enemies and bullet.
+- Added player death and hit animation
 
-- Fixed VAO not being properly deleted.
+- Enemies can shoot maximum 3 bullets at a time.
 
-- Improved memory management.
-
-### SHOWCASE
+# SHOWCASE
 ![](https://github.com/HuseinSolakov/Space_Invaders/blob/main/showcase.gif)
 

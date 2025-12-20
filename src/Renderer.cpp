@@ -1,12 +1,14 @@
 #include "Renderer.h"
 #include <iostream>
+#include <vector>
 //--- ShapeRenderer ---
 
 //constructor
-ShapeRenderer::ShapeRenderer(Shader &shader)
+ShapeRenderer::ShapeRenderer(Shader &shader, Shape s, GLenum usage)
 {
+    this->shape = s;
     this->shader = shader;
-    this->initRenderData();
+    this->initRenderData(usage);
 }
 
 //destructor
@@ -34,27 +36,67 @@ void ShapeRenderer::DrawShape
     this->shader.SetVector3f("shapeColor", color);
 
     glBindVertexArray(this->quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);	//let user choose the type
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+}
+
+//draw line 
+void ShapeRenderer::DrawLine
+(glm::vec2 position, float size, float rotate, glm::vec3 color)
+{
+    // prepare transformations
+    this->shader.Use();
+    
+    glm::mat4 model = glm::mat4(1.0f);
+    
+    model = glm::translate(model, glm::vec3(position, 0.0f));  
+    model = glm::translate(model, glm::vec3(0.5f * size, 0.5f * size, 0.0f)); 
+    model = glm::rotate(model, glm::radians(rotate), glm::vec3(0.0f, 0.0f, 1.0f)); 
+    model = glm::translate(model, glm::vec3(-0.5f * size, -0.5f * size, 0.0f));
+    model = glm::scale(model, glm::vec3(0.0f, size, 1.0f));
+  
+    this->shader.SetMatrix4("model", model);
+    this->shader.SetVector3f("shapeColor", color);
+
+    glBindVertexArray(this->quadVAO);
+    glDrawArrays(GL_LINES, 0, 2);	
     glBindVertexArray(0);
 }
 
 //initialize data
-void ShapeRenderer::initRenderData()
+void ShapeRenderer::initRenderData(GLenum usage)
 {
 	//configure VAO & VBO
 	//VBO data
 	unsigned int VBO;
-	float vertices[] = 
+	std::vector<float> vertices;
+	
+	//square
+	if(shape == Shape::Square)
 	{
-		//position
-		0.0f, 1.0f,
-		1.0f, 0.0f,
-		0.0f, 0.0f,
+		 vertices = 
+		{
+			//position
+			0.0f, 1.0f,
+			1.0f, 0.0f,
+			0.0f, 0.0f,
 		
-		0.0f, 1.0f,
-		1.0f, 1.0f,
-		1.0f, 0.0f,		
-	};
+			0.0f, 1.0f,
+			1.0f, 1.0f,
+			1.0f, 0.0f,		
+		};
+	}
+	
+	//line
+	else if(shape == Shape::Line)
+	{
+		 vertices = 
+		{
+			//position
+			0.0f, 1.0f,
+			1.0f, 0.0f,	
+		};
+	}
 	
 	//gen VAO
 	glGenVertexArrays(1, &this->quadVAO);
@@ -63,7 +105,7 @@ void ShapeRenderer::initRenderData()
 	//bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//store the data inside the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], usage);
 	//bind VAO
 	glBindVertexArray(this->quadVAO);
 	//Specify the shader attribute
@@ -79,15 +121,16 @@ void ShapeRenderer::initRenderData()
 
 //constructor
 //for single file texture
-SpriteRenderer::SpriteRenderer(Shader &shader)
+SpriteRenderer::SpriteRenderer(Shader &shader, GLenum usage)
 {
     this->shader = shader;
+    this->usage = usage;
     this->initRenderData();
 }
 
 //for sprite sheet
 SpriteRenderer::SpriteRenderer
-(Shader &shader, int sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height)
+(Shader &shader, int sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height, GLenum usage)
 {
     base = sprite_base;
     distance = sprite_distance;
@@ -98,6 +141,7 @@ SpriteRenderer::SpriteRenderer
     SetSpriteLocation(sprite_column, sprite_row);
     
     this->shader = shader;
+    this->usage = usage;
 }
 
 //destructor - delete VAO
@@ -142,7 +186,7 @@ void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
     current_sprite = base * sprite_column;
     //if its not first sprite add distance
     if(sprite_column > 1)
-	current_sprite += distance.x;
+	current_sprite += (sprite_column -1) * distance.x;
     
     //max min value x axis
     float X_sprite_max = NDC_pixel_x * current_sprite;
@@ -154,7 +198,7 @@ void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
 
     //2// Getting the max min value for  Y axis
     current_sprite = base * sprite_row;
-    current_sprite += distance.y;
+    current_sprite += (sprite_row -1) * distance.y;
     
     float Y_sprite_max = NDC_pixel_y * current_sprite;
     float Y_sprite_min = NDC_pixel_y * (current_sprite - base);
@@ -191,7 +235,7 @@ void SpriteRenderer::initRenderData()
 	//bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//store the data inside the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, this->usage);
 	//bind VAO
 	glBindVertexArray(this->quadVAO);
 	//Specify the shader attribute
@@ -229,7 +273,7 @@ void SpriteRenderer::initRenderData_SpriteSheet(float X_max, float X_min, float 
 	//bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//store the data inside the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, this->usage);
 	//bind VAO
 	glBindVertexArray(this->quadVAO);
 	//Specify the shader attribute
