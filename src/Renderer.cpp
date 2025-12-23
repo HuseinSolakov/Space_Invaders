@@ -4,9 +4,8 @@
 //--- ShapeRenderer ---
 
 //constructor
-ShapeRenderer::ShapeRenderer(Shader &shader, Shape s, GLenum usage)
+ShapeRenderer::ShapeRenderer(Shader &shader, GLenum usage)
 {
-    this->shape = s;
     this->shader = shader;
     this->initRenderData(usage);
 }
@@ -36,7 +35,9 @@ void ShapeRenderer::DrawShape
     this->shader.SetVector3f("shapeColor", color);
 
     glBindVertexArray(this->quadVAO);
+
     glDrawArrays(GL_TRIANGLES, 0, 6);
+    
     glBindVertexArray(0);
 }
 
@@ -59,6 +60,7 @@ void ShapeRenderer::DrawLine
     this->shader.SetVector3f("shapeColor", color);
 
     glBindVertexArray(this->quadVAO);
+
     glDrawArrays(GL_LINES, 0, 2);	
     glBindVertexArray(0);
 }
@@ -69,35 +71,19 @@ void ShapeRenderer::initRenderData(GLenum usage)
 	//configure VAO & VBO
 	//VBO data
 	unsigned int VBO;
-	std::vector<float> vertices;
-	
-	//square
-	if(shape == Shape::Square)
+
+	float vertices[] = 
 	{
-		 vertices = 
-		{
-			//position
-			0.0f, 1.0f,
-			1.0f, 0.0f,
-			0.0f, 0.0f,
+		//position
+		0.0f, 1.0f,
+		1.0f, 0.0f,
+		0.0f, 0.0f,
 		
-			0.0f, 1.0f,
-			1.0f, 1.0f,
-			1.0f, 0.0f,		
-		};
-	}
-	
-	//line
-	else if(shape == Shape::Line)
-	{
-		 vertices = 
-		{
-			//position
-			0.0f, 1.0f,
-			1.0f, 0.0f,	
-		};
-	}
-	
+		0.0f, 1.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+	};
+		
 	//gen VAO
 	glGenVertexArrays(1, &this->quadVAO);
 	//gen VBO
@@ -105,7 +91,7 @@ void ShapeRenderer::initRenderData(GLenum usage)
 	//bind VBO
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	//store the data inside the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices[0], usage);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, usage);
 	//bind VAO
 	glBindVertexArray(this->quadVAO);
 	//Specify the shader attribute
@@ -130,7 +116,7 @@ SpriteRenderer::SpriteRenderer(Shader &shader, GLenum usage)
 
 //for sprite sheet
 SpriteRenderer::SpriteRenderer
-(Shader &shader, int sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height, GLenum usage)
+(Shader &shader, glm::vec2 sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int img_width,int img_height, GLenum usage)
 {
     base = sprite_base;
     distance = sprite_distance;
@@ -138,7 +124,7 @@ SpriteRenderer::SpriteRenderer
     width = img_width;
     height = img_height;
 
-    SetSpriteLocation(sprite_column, sprite_row);
+    this->SetSpriteLocation(sprite_column, sprite_row);
     
     this->shader = shader;
     this->usage = usage;
@@ -183,25 +169,25 @@ void SpriteRenderer::SetSpriteLocation(int sprite_column, int sprite_row)
     int current_sprite = 0;
        
     //1// Getting the sprite max min for X axis
-    current_sprite = base * sprite_column;
+    current_sprite = base.x * sprite_column;
     //if its not first sprite add distance
     if(sprite_column > 1)
 	current_sprite += (sprite_column -1) * distance.x;
     
     //max min value x axis
     float X_sprite_max = NDC_pixel_x * current_sprite;
-    float X_sprite_min = NDC_pixel_x * (current_sprite - base);
+    float X_sprite_min = NDC_pixel_x * (current_sprite - base.x);
     //if its first sprite
     if(sprite_column < 1)
         X_sprite_min = 0.0;
 
 
     //2// Getting the max min value for  Y axis
-    current_sprite = base * sprite_row;
+    current_sprite = base.y * sprite_row;
     current_sprite += (sprite_row -1) * distance.y;
     
     float Y_sprite_max = NDC_pixel_y * current_sprite;
-    float Y_sprite_min = NDC_pixel_y * (current_sprite - base);
+    float Y_sprite_min = NDC_pixel_y * (current_sprite - base.y);
     //if its first sprite
     if(sprite_row < 1)
         Y_sprite_min = 0.0;

@@ -54,7 +54,10 @@ Player::Player(glm::vec2 position,  glm::vec2 size, float rotation, glm::vec3 co
 void Player::UpdatePlayer()
 {
 	if(status.lives == 0)
-	   status.alive = false;	
+	   status.alive = false;
+	   
+	if(status.alive == false && status.lives != 0)
+	   status.lives = 0;
 }
 
 void Player::Hit_Animation(SpriteRenderer   *sprite_renderer, float duration, int sprite_row)
@@ -241,11 +244,11 @@ Enemy::Enemy(glm::vec2 position,  glm::vec2 size,    glm::vec2 distance, float r
 	SetPositions();
 }
 
-//Draw enemies
-							///* ShapeRenderer *test,*/
-void Enemy::DrawEnemies(SpriteRenderer   *sprite_renderer,Texture2D &texture, int frames, int sprite_row)
+//Draw enemies 
+bool Enemy::DrawEnemies(SpriteRenderer   *sprite_renderer,Texture2D &texture, int frames, int sprite_row)
 {
 	int enemy = sprite;
+	int killed_enemies = 0;
 	//draw enemies
 	for(int x = 0; x < 5 ; x++)
 	{
@@ -253,12 +256,24 @@ void Enemy::DrawEnemies(SpriteRenderer   *sprite_renderer,Texture2D &texture, in
 		{
 			sprite_renderer->SetSpriteLocation(enemy, sprite_row);
 			if(enemy_positions[x][y].z)
-				sprite_renderer->DrawSprite(texture, enemy_positions[x][y], this->size, rotation, color);	
+			{
+				sprite_renderer->DrawSprite(texture, enemy_positions[x][y], this->size, rotation, color);
+			}
+			else
+			{
+				killed_enemies ++;
+			}
 		}
 		// draw enemies
 		if(x == 0 || x == 2)
 				enemy += frames;
 	}
+	
+	if(killed_enemies >= 55)
+	  return true;
+
+	
+	  return false;
 }
 
 //Enemy animation
@@ -278,8 +293,8 @@ void Enemy::EnemyAnimation(float duration, int frames)
 	}	
 }
 
-//Check if enemies get hit
-void Enemy::EnemyHitDetection(Player *player)
+//Check if enemies get hit returns true if player hits enemies else false
+bool Enemy::EnemyHitDetection(Player *player)
 {
   for(int i=0; i<5; i++)			
     for(int j=0; j<11; j++)	
@@ -294,18 +309,27 @@ void Enemy::EnemyHitDetection(Player *player)
 	  		this->enemy_speed.X_speed += this->enemy_speed.acceleration;
 			enemy_positions[i][j].z = false;
 			player->bullet = Bullet::NONE;
+			
+			return true;
 	  	}
 	  //enemy player collision
 	  if(enemy_positions[i][j].x > player->position.x - player->size.x && enemy_positions[i][j].x < player->position.x + 
 	  player->size.x)
 	      if(enemy_positions[i][j].y > player->position.y - player->size.y / 2)
-	      player->status.alive = false;
+	      {
+	        player->status.alive = false;
 	      
+	        return false;
+	      }
 	  //enemy getting past player
 	  if(enemy_positions[i][j].y > player->position.y + this->size.y)
+	   {
 	      player->status.alive = false;
+	      return false;
+	   }
 	}
     }
+    return false;
 }
 
 void Enemy::SetSpeed(float X_speed, float Y_speed, float acceleration)

@@ -122,12 +122,13 @@ Enemy(glm::vec2 position,  glm::vec2 size,    glm::vec2 distance, glm::vec3 colo
 Enemy(glm::vec2 position,  glm::vec2 size,    glm::vec2 distance, float rotation, glm::vec3 color = glm::vec3(1.0f));
 
 //methods
-//rendering methods
-void DrawEnemies(SpriteRenderer   *sprite_renderer,  Texture2D &texture, int frames, int sprite_row);
+//draw enemies returns whether enemies have been defeated or not
+bool DrawEnemies(SpriteRenderer   *sprite_renderer,  Texture2D &texture, int frames, int sprite_row);
+//enemy animation
 void EnemyAnimation(float duration = 0.3f, int frames = 2);
 
 //Check if enemies get hit
-void EnemyHitDetection(Player *player);
+bool EnemyHitDetection(Player *player);
 
 //Enemy Player Collision -> check if player and enemies collide or enemies are past player
 bool EnemyPlayerCollision(Player *player);

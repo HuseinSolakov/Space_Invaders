@@ -4,18 +4,15 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
 #include "Texture.h"
 #include "ShaderClass.h"
-
-enum class Shape {Square, Line};
 
 //renders shapes
 class ShapeRenderer
 {
 public:
 	//constructor
-	ShapeRenderer(Shader &shader, Shape s = Shape::Square, GLenum usage = GL_STATIC_DRAW);
+	ShapeRenderer(Shader &shader, GLenum usage = GL_STATIC_DRAW);
 	//destructor
 	~ShapeRenderer();
 	
@@ -24,7 +21,6 @@ public:
 	void DrawLine(glm::vec2 position, float size = 10.0f, float rotate = 0.0f, glm::vec3 color = glm::vec3(1.0f));
 
 private:
-	Shape shape;	
 	//shader object
 	Shader shader;
 	//VAO buffer for vertex data
@@ -43,7 +39,7 @@ public:
 	//single image file
 	SpriteRenderer(Shader &shader, GLenum usage = GL_STATIC_DRAW);
 	//spritesheet
-	SpriteRenderer(Shader &shader, int sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int 
+	SpriteRenderer(Shader &shader, glm::vec2 sprite_base, glm::vec2 sprite_distance, int sprite_column, int sprite_row, int 
 	img_width,int img_height, GLenum usage = GL_STATIC_DRAW);
 	
 	//destructor
@@ -65,7 +61,7 @@ private:
     	int height = 0;
     	
     	//sprite size
-    	int base = 0;
+    	glm::vec2 base = glm::vec2(0.0f,0.0f);
 	
 	unsigned int quadVAO;
 	

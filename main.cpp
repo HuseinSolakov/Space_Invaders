@@ -1,4 +1,7 @@
+#define GLT_IMPLEMENTATION
+
 #include "glad.h"
+#include "gltext.h"
 #include<GLFW/glfw3.h>
 
 #include <iostream>
@@ -53,12 +56,18 @@ private:
 	SpriteRenderer  *enemy_renderer;
 	ShapeRenderer   *shape_renderer;
 	
+	//UI
+	int score = 0;
+	SpriteRenderer *UI;
+	GLTtext *Score_text;
+	GLTtext *EndGame_text;
+	
 	//player object
 	Player* player = new Player(glm::vec2(350.0f, 525.0f), glm::vec2(60.0f, 60.0f));
 	
 	//enemy object
 	Enemy* enemy =  new Enemy(glm::vec2(160.0f, 80.0f),  glm::vec2(25.0f,25.0f),    glm::vec2(0.0f, 0.0f));
-	
+		
 	//METHODS
 	
 	//input 
@@ -116,7 +125,15 @@ private:
 	enemy->Update_Bullet(100.0f, deltaTime, Window_height, player);
 	
 	//hit detection
-	enemy->EnemyHitDetection(player);
+	if(enemy->EnemyHitDetection(player) == true)
+	{
+	  score++;
+	  //update score
+	  string str = to_string(score);
+	  const char *c_score = str.c_str();
+	  gltSetText(Score_text, c_score);
+	}
+	
 	}
 	
 	//render
@@ -138,16 +155,53 @@ private:
 		player->Hit_Animation(player_renderer, 0.1f);
 		player->BulletAnimation(bullet_renderer, 9, 4);
 
+		//lose screen
+		if(!player->status.alive)
+		  {
+		    gltBeginDraw();
+		       gltSetText(EndGame_text, "YOU LOSE !");
+		       gltDrawText2D(EndGame_text, 50, 200, 9);
+	            gltEndDraw();
+		  }
+		
 		//draw enemies
-		enemy->DrawEnemies(enemy_renderer,  ResourceManager::GetTexture("sprites"), 2, 3);
+		if(enemy->DrawEnemies(enemy_renderer,  ResourceManager::GetTexture("sprites"), 2, 3))
+		{
+		//win screen
+		gltBeginDraw();
+		   gltSetText(EndGame_text, "YOU WON !");
+		   gltDrawText2D(EndGame_text, 50, 200, 9);
+		gltEndDraw();
+		}
+		//draw enemy bullets
 		enemy->Render_Bullet(shape_renderer);
 
 		//enemy animation
 		enemy->EnemyAnimation(0.8f, 2);
 		
+		//UI
+		//Score
+		UI->SetSpriteLocation(1, 5);
+		UI->DrawSprite(ResourceManager::GetTexture("UI_elements") ,glm::vec2(Window_width - (Window_width - 10), Window_height - (Window_height - 20)), glm::vec2(120.0, 30.0));
+		//Score text
+		gltBeginDraw();
+		  gltColor(1.0f, 1.0f, 1.0f, 1.0f);
+		  gltDrawText2D(Score_text, 130, 13, 3);
+		gltEndDraw();
+		
+		//Lives
+		switch(player->status.lives)
+		{
+		case 0:  UI->SetSpriteLocation(1, 4); break;
+		case 1:  UI->SetSpriteLocation(1, 3); break;
+		case 2:  UI->SetSpriteLocation(1, 2); break;
+		case 3:  UI->SetSpriteLocation(1, 1); break;
+		}
+		UI->DrawSprite(ResourceManager::GetTexture("UI_elements"), glm::vec2(Window_width - 160, Window_height - (Window_height - 20)), glm::vec2(120.0, 30.0));
+				
 		//swap buffers poll events
 		glfwSwapBuffers(window);
-		glfwPollEvents();	
+		glfwPollEvents();
 	}
 
 public:
@@ -197,9 +251,17 @@ public:
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		
+		// Initialize glText
+		gltInit();
+		
+		//text
+		EndGame_text = gltCreateText();
+		Score_text = gltCreateText();
+		gltSetText(Score_text, "0");
+		
 		//shaders
 		//load shaders into shader program
-   		ResourceManager::LoadShader("../shaders/sprite.vert", "../shaders/sprite.frag", nullptr, "sprite_sheet");
+ 		ResourceManager::LoadShader("../shaders/sprite.vert", "../shaders/sprite.frag", nullptr, "sprite_sheet");
    		ResourceManager::LoadShader("../shaders/default.vert", "../shaders/default.frag", nullptr, "default");
 
 		// configure shaders
@@ -211,23 +273,26 @@ public:
 		
 		//sprites
 		ResourceManager::LoadTexture("../Textures/sprites.png", true, "sprites");
+		ResourceManager::LoadTexture("../Textures/UI_elements.png", true, "UI_elements");
 
 		//get sprite image dimensions
 		int* imgSize = new int[2];
 		imgSize[0] = ResourceManager::GetTexture("sprites").img_width;
 		imgSize[1] = ResourceManager::GetTexture("sprites").img_height;
 		
-		shape_renderer = new ShapeRenderer(ResourceManager::GetShader("default"), Shape::Line, GL_DYNAMIC_DRAW);
+		shape_renderer = new ShapeRenderer(ResourceManager::GetShader("default"), GL_DYNAMIC_DRAW);
+
 		//set render-specific controls
-		player_renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 32, glm::vec2(0.0f, 10.0f), 1,1, 288,158);
-		enemy_renderer  = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 32, glm::vec2(0.0f, 10.0f), 1,1, 288,158);
-		bullet_renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), 32, glm::vec2(0.0f, 10.0f), 1,1, 288,158);
+		UI = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), glm::vec2(40.0, 10.0), glm::vec2(0.0f,0.0f),1,1,40,50);
+		player_renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), glm::vec2(32.0), glm::vec2(0.0f, 10.0f), 1,1, imgSize[0],imgSize[1]);
+		enemy_renderer  = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), glm::vec2(32.0), glm::vec2(0.0f, 10.0f), 1,1, imgSize[0],imgSize[1]);
+		bullet_renderer = new SpriteRenderer(ResourceManager::GetShader("sprite_sheet"), glm::vec2(32.0), glm::vec2(0.0f, 10.0f), 1,1, imgSize[0],imgSize[1]);
 		
 		//viewport framebuffer callback
 		glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height) { glViewport(0, 0, width, height); });
 		
 		//set enemy speed
-		enemy->SetSpeed(30.0f, 5.0f, 5.0f);
+		enemy->SetSpeed(20.0f, 3.0f, 5.0f);
 	}
 	
 	//destructor
@@ -244,6 +309,14 @@ public:
 		delete player_renderer;
 		delete bullet_renderer;
 		delete shape_renderer;
+		delete UI;
+
+		// Deleting text
+		gltDeleteText(this->Score_text);
+		gltDeleteText(this->EndGame_text);
+		
+		// Destroy glText
+		gltTerminate();
 		
 		//terminate glfw after deleting objects
 		glfwTerminate();
@@ -258,13 +331,13 @@ public:
 			ProcessInput();
 			Render();
 			Update();
-
 		}
 	}
 };
 
 int main()
 {
+	//random seed
 	srand((unsigned) time(NULL));
 
 	Game game;
