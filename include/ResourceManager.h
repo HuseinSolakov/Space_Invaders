@@ -3,6 +3,11 @@
 #ifndef RESOURCE_MANAGER_H
 #define RESOURCE_MANAGER_H
 
+#include "stb_image.h"
+
+#include <iostream>
+#include <sstream>
+#include <fstream>
 #include <map>
 #include <string>
 
@@ -10,6 +15,8 @@
 
 #include "Texture.h"
 #include "ShaderClass.h"
+
+
 class ResourceManager
 {
 	public:
