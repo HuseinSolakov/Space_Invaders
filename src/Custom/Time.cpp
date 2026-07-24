@@ -7,7 +7,7 @@ float Time::GetDeltaTime()
 	//get deltatime
 	float currentFrame = glfwGetTime();
 	deltaTime = currentFrame - lastFrame;
-	lastFrame = currentFrame;
+	lastFrame += deltaTime;
 
 	return deltaTime;
 }

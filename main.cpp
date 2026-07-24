@@ -160,10 +160,14 @@ private:
 			player->move_player = Movement::RIGHT;
 
 	    if(glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
-			player->move_player = Movement::LEFT;
+		player->move_player = Movement::LEFT;
+	
 	    //Player bullet => X
+	    if(player->bullet == Bullet::SHOOT)
+		shoot = false;
+	
 	    if(shoot)
-  		player->bullet = Bullet::SHOOT;
+		player->bullet = Bullet::SHOOT;
 	  
 	    //keycallback
 	    glfwSetKeyCallback(window, key_callback);
@@ -171,7 +175,7 @@ private:
 	}
 	
 	//2) UPDATE METHOD
-	void Update()
+	void Update(float step)
 	{
 	  //main menu scoreboard button
 	  if(menu->mm_buttons == MenuButtons::BUTTON_2)
@@ -184,11 +188,8 @@ private:
 	  //game update => main menu play button
 	  if(menu->mm_buttons == MenuButtons::BUTTON_1 && fade <= 1.0)
 	  {
-	     //get deltatime
-	     deltaTime = my_time.GetDeltaTime();
-	
-	     //Player movement
-	     float speed = 200.0 * deltaTime;
+	     //Player movement speed
+	     float speed = 250.0 * step;
 	
 	     //update player position after input
 	     switch(player->move_player)
@@ -200,16 +201,22 @@ private:
 	     //Checking if player hits window border
 	     player->BorderSwap(Window_width);
 	
-	     //player update
+	     //player update 
+	     // 	=> check whether there are any remaining lives, if no lives remain then set player's alive status to false
 	     player->UpdatePlayer();
 	
 	     //Player bullet
-	     float bullet_speed = 400.0 * deltaTime;
+	     //Player bullet speed
+	     float bullet_speed = 400.0 * step;
+	     
+	     //update player bullet
 	     player->PlayerBullet(bullet_speed);
 	
-	     //Enemy 
-	     enemy->EnemyMovement(Window_width, Window_height, deltaTime);
-	     enemy->Update_Bullet(100.0f, deltaTime, Window_height, player);
+	     //Enemy
+	     //enemy movement 
+	     enemy->EnemyMovement(Window_width, Window_height, step);
+	     //enemy bullet
+	     enemy->Update_Bullet(100.0f, step , Window_height, player);
 	
 	     //hit detection
 	     if(enemy->EnemyHitDetection(player) == true)
@@ -616,6 +623,7 @@ public:
 	  glfwTerminate();
 	}
 	
+	float accumulator = 0.0;
 	//run game
 	void Run()
 	{
@@ -624,7 +632,17 @@ public:
 	  {
 	    ProcessInput();
 	    Render();
-	    Update();
+	    
+	    //get deltatime
+	    deltaTime = my_time.GetDeltaTime();
+	    //accumulator
+	    accumulator += deltaTime;
+	    
+	    while(accumulator > 0.02)
+	    {
+	    Update(0.02);
+	    accumulator -= 0.02;
+	    }
 	  }
 	}
 };

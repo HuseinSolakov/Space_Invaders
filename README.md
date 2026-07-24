@@ -1,22 +1,23 @@
 # CHANGE LOG
 
-## Added
+## Improved the game update
+- improved the game update to be more consistent across different hardware.
 
-- Main menu:
-   - with 3 buttons play, scoreboard and exit
-   - play starts the game
-   - scoreboard shows the leaderboard
-   - exit closes the game
+## Better bullet detection
+- fixed the player bullet being able hiting multiple enemies when x key is spammed.
+- fixed the range of enemy bullet.
 
-- Select name menu
-   - the menu apears after the game is over 
-   - can be used to insert a player name
+# resources used:
+## libraries
+- [glad](https://glad.dav1d.de/) used for loading OpenGL functions.
+- [GLFW](https://www.glfw.org/) used for window management.
+- [CMake](https://cmake.org/) used for organizing files.
+- [stb_image](https://github.com/nothings/stb/blob/master/stb_image.h) used for loading images.
+- [glText](https://github.com/Vallentin/glText) used for displaying text.
+- [DearImGui](https://github.com/ocornut/imgui) used for creating menu's.
 
-- Fading effect
-   - appears when the game is over (won or lost) and is used as a transition to naming menu.
-
-- The text is added using the [glText](https://github.com/Vallentin/glText) library.
-- Library used for the menus [DearImGui](https://github.com/ocornut/imgui)
+## other
+- [piskel](https://www.piskelapp.com/p/create/sprite/) used for creating sprites/textures.
 
 # SHOWCASE
 ## Main menu

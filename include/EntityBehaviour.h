@@ -141,6 +141,6 @@ void EnemyMovement(int border_x, int border_y, float deltaTime);
 void Render_Bullet(ShapeRenderer *shapeshader);
 
 //update the enemy bullets
-void Update_Bullet(float speed, float deltatime, int Window_height, Player *player);
+void Update_Bullet(float speed, float step, int Window_height, Player *player);
 };
 #endif

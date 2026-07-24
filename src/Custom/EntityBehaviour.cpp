@@ -390,7 +390,6 @@ void Enemy::SetPositions()
 		for(int j=0; j<11; j++)	
 		{
 			enemy_positions[i][j] = glm::vec3(position.x + distance.x, position.y + distance.y, true);
-			//bullet_pos[i][j] = glm::vec3(0.0f,0.0f, false);
 			
 			distance.x += 45.0f;
 		}
@@ -440,27 +439,31 @@ if(counter < 3)
 }
 
 //render the bullets
+//loop 3 times so that enemies can shoot up to 3 times
 for(int i = 0; i < 4; i++)
   if(bullet_pos[i].z == true)
     shapeshader->DrawLine(glm::vec2(bullet_pos[i].x+this->size.x/2, bullet_pos[i].y+this->size.y), 20);
 }
 
 //update bullet position and status
-void Enemy::Update_Bullet(float speed, float deltatime, int Window_height, Player *player)
+void Enemy::Update_Bullet(float speed, float step, int Window_height, Player *player)
 {
+	//loop 3 times so that enemies can shoot up to 3 times
 	for(int i = 0; i < 4; i++)
 	{
 	  if(bullet_pos[i].z == true)
 	  {
-	  	bullet_pos[i].y += speed * deltatime;
+	  	bullet_pos[i].y += speed * step;
 	  	if(bullet_pos[i].y > Window_height)
 	  	{
 	  		bullet_pos[i].z = false;
 	  		counter--;
 	  	}
-	  	
+
+	  	// if bullet is between the players horizontal position
 	  	if(bullet_pos[i].x > player->position.x - player->size.x/2 && bullet_pos[i].x < player->position.x + player->size.x/2)
-		  if(bullet_pos[i].y > player->position.y - player->size.y / 2)
+		  // if bullet is in between players vertical position
+		  if(bullet_pos[i].y > player->position.y- player->size.y*0.5 && bullet_pos[i].y < player->position.y+ player->size.y*0.2)
 	  	  {
 		    //decrease player lifes
 		    if(player->status.lives > 0)
