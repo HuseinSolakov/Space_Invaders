@@ -4,7 +4,7 @@
 - improved the game update to be more consistent across different hardware.
 
 ## Better bullet detection
-- fixed the player bullet being able hiting multiple enemies when x key is spammed.
+- fixed the player bullet being able to hit multiple enemies when x key is spammed.
 - fixed the range of enemy bullet.
 
 # resources used:
